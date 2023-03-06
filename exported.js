@@ -8,5 +8,5 @@ const schema=new mongoose.Schema({
     receivedBy:String,
     receivedFrom:String
 })
-const Item=mongoose.model('ITEMS',schema);
-module.exports=Item;
+const ExportedItem=mongoose.model('EXPORTEDITEMS',schema);
+module.exports=ExportedItem;
