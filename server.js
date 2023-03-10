@@ -57,7 +57,7 @@ app.get('/getimporteditems',async(req,res)=>{
       data: data,
     });
   }catch{
-    console.log(err);
+    // console.log(err);
     res.status(500).json({ error: 'server error' });
   }
 })

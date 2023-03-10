@@ -7,7 +7,8 @@ const schema=new mongoose.Schema({
     description:String,
     receivedBy:String,
     receivedFrom:String,
-    exportedTo:String
+    exportedTo:String,
+    purpose:String
 })
 const ExportedItem=mongoose.model('EXPORTEDITEMS',schema);
 module.exports=ExportedItem;
