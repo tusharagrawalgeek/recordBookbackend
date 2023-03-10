@@ -6,7 +6,8 @@ const schema=new mongoose.Schema({
     expiry:String,
     description:String,
     receivedBy:String,
-    receivedFrom:String
+    receivedFrom:String,
+    exportedTo:String
 })
 const ExportedItem=mongoose.model('EXPORTEDITEMS',schema);
 module.exports=ExportedItem;
