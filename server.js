@@ -31,16 +31,17 @@ app.use(cors());
 app.post('/setitem',(req,res)=>{
     const p=new Item(req.body)
     const q=new ImportedItem(req.body)
-    var result="";
+    var result=200;
     p.save().then(()=>{
         console.log("added to current inventory");
     }).catch((err)=>{
-        console.log(err);
+      console.log("Could not add");
+      res.status(500).json({ error: 'server error' });
     })
     q.save().then(()=>{
       console.log("added to importeditems");
     }).catch((err)=>{
-      console.log(err);
+      res.status(500).json({ error: 'server error' });
     })
     console.log(result);
     res.send(result)
