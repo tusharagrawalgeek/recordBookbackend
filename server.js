@@ -75,14 +75,16 @@ app.get('/getitem', async (req,res,next)=>{
   }
 });
 app.delete('/deleteitem/:id', async(req,res)=>{
-  // const count=await Item.find({_id:req.params.id}).limit(1).count()
-    // if(count>0){
       const result=await Item.findByIdAndDelete(req.params.id)
-    res.send("Deleetd")
-    // }else{
-      // res.send(0)
-    // }
-    
+    res.send("Deleted")
+})
+app.delete('/deleteimporteditem/:id', async(req,res)=>{
+  const result=await ImportedItem.findByIdAndDelete(req.params.id)
+res.send("Deleted")
+})
+app.delete('/deleteexporteditem/:id', async(req,res)=>{
+  const result=await ExportedItem.findByIdAndDelete(req.params.id)
+res.send("Deleted")
 })
 app.get('/getuser', async (req,res,next)=>{
     try{
