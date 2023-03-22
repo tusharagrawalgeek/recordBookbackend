@@ -8,7 +8,8 @@ const Item=require('./schema');
 const User=require('./userSchema');
 const ExportedItem=require('./exported');
 const ImportedItem=require('./importedItem');
-const db='mongodb+srv://tushar:tushar432@cluster0.pvtih2d.mongodb.net/db2?retryWrites=true&w=majority';
+// const db='mongodb+srv://tushar:tushar432@cluster0.pvtih2d.mongodb.net/db2?retryWrites=true&w=majority';
+const db='mongodb+srv://tushar:tushar123@cluster0.bnlzgl7.mongodb.net/rishi?retryWrites=true&w=majority';
 // mongodb+srv://tushar:<password>@cluster0.pvtih2d.mongodb.net/?retryWrites=true&w=majority
 mongoose.connect(db,{
     // useNewUrlParser:true,
