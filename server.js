@@ -10,6 +10,7 @@ const ExportedItem = require("./exported");
 const ImportedItem = require("./importedItem");
 // const db='mongodb+srv://tushar:tushar432@cluster0.pvtih2d.mongodb.net/db2?retryWrites=true&w=majority';
 const db =
+// const db='mongodb+srv://tushar:tushar432@cluster0.pvtih2d.mongodb.net/testing?retryWrites=true&w=majority';
   "mongodb+srv://tushar:tushar123@cluster0.bnlzgl7.mongodb.net/rishi?retryWrites=true&w=majority";
 // mongodb+srv://tushar:<password>@cluster0.pvtih2d.mongodb.net/?retryWrites=true&w=majority
 mongoose
@@ -160,6 +161,49 @@ app.post("/setuser", (req, res) => {
       console.log(err);
     });
 });
+app.post("/undoExport/:id",async (req,res)=>{
+  console.log(req.params.id);
+  const exportedItem=await ExportedItem.findById(req.params.id);
+  const inventoryItem=await Item.find({name:exportedItem.name});
+  // console.log(inventoryItem[0]);
+  var result=false;
+  if(inventoryItem[0]){
+    // console.log(inventoryItem[0]);
+    const updateRes=await Item.findByIdAndUpdate(inventoryItem[0]._id, {quantity:exportedItem.quantity+inventoryItem[0].quantity});
+  // console.log(updateRes);
+  if(updateRes){
+    result=true;
+  }else{
+    result=false;
+  }
+  }else{
+    // console.log("nort exist");
+    const item= Item({
+      name:exportedItem.name,
+      quantity:exportedItem.quantity,
+      date:exportedItem.date,
+      expiry:exportedItem.expiry,
+      description:exportedItem.description,
+      receivedBy:exportedItem.receivedBy,
+      receivedFrom:exportedItem.receivedFrom
+    });
+    item.save()
+    .then((res) => {
+    })  
+    .catch((err) => {
+    });
+    result=true;
+  }
+  if(result){
+    const deleteRes=await ExportedItem.deleteOne({_id:req.params.id});
+    console.log(deleteRes);
+    console.log("done success");
+    res.status(200).send({res:true,message:"Operation undone"});
+  }else{
+    res.status(500).send({res:false,message:"Could not undo"});
+  }
+  // res.send(true);
+})
 app.listen(3001, () => {
   console.log("Server is listening at port 3001");
 });
