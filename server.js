@@ -3,16 +3,15 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 
 const app = express();
-
+const Logger=require("./loggerFileSchema");
 const Item = require("./schema");
 const User = require("./userSchema");
 const ExportedItem = require("./exported");
 const ImportedItem = require("./importedItem");
 // const db='mongodb+srv://tushar:tushar432@cluster0.pvtih2d.mongodb.net/db2?retryWrites=true&w=majority';
 const db =
-// const db='mongodb+srv://tushar:tushar432@cluster0.pvtih2d.mongodb.net/testing?retryWrites=true&w=majority';
-  "mongodb+srv://tushar:tushar123@cluster0.bnlzgl7.mongodb.net/rishi?retryWrites=true&w=majority";
-// mongodb+srv://tushar:<password>@cluster0.pvtih2d.mongodb.net/?retryWrites=true&w=majority
+    'mongodb+srv://tushar:tushar123@cluster0.bnlzgl7.mongodb.net/testing?retryWrites=true&w=majority';
+  // "mongodb+srv://tushar:tushar123@cluster0.bnlzgl7.mongodb.net/rishi?retryWrites=true&w=majority";
 mongoose
   .connect(db, {
     // useNewUrlParser:true,
@@ -36,13 +35,20 @@ app.use(express.json());
 app.use(cors());
 
 //adds and item to both curent inventory and imported item if id is null and if id is given then the item with the given id is updated and also added in the imported items
-app.post("/setitem", (req, res) => {
+app.post("/setitem", async (req, res) => {
     var result = 200;
     // if(req.params.id===-1){
       const p = new Item(req.body);
-  p.save()
-    .then(() => {
-      console.log("added to current inventory");
+  
+      const newLog= new Logger({timestamp:new Date(), type:"import 1", data:JSON.stringify(req.body)});
+      // console.log(newLog);
+      
+      await p.save()
+    .then(async () => {
+      // console.log("added to current inventory");
+      await newLog.save()
+      .then(res=>console.log("Logged 1"))
+      .catch(console.log)
     })
     .catch((err) => {
       console.log("Could not add");
@@ -60,8 +66,12 @@ app.post("/setimporteditem", (req, res) => {
   const q = new ImportedItem(req.body);
   var result = 200;
   q.save()
-    .then(() => {
+    .then(async () => {
       console.log("added to importeditems");
+      const newlog=new Logger({timestamp:new Date().toLocaleString("en-US", {timeZone: 'Asia/Kolkata'}),type:"import 2",data:JSON.stringify(req.body)});
+      newlog.save()
+      .then(console.log("Logged 2"))
+      .catch()
     })
     .catch((err) => {
       res.status(500).json({ error: "server error" });
@@ -96,16 +106,28 @@ app.get("/getitem", async (req, res, next) => {
   }
 });
 app.delete("/deleteitem/:id", async (req, res) => {
+  // const obj=await Item.findById(req.params.id);
   const result = await Item.findByIdAndDelete(req.params.id);
-  res.send("Deleted");
+  const newLog=await new Logger({timestamp:new Date(),type:"delete inventory",data:JSON.stringify(result)})
+  newLog.save()
+  .then(res.send("Deleted"))
+  .catch(console.log)
+  // console.log(result);
+  // res.send("Deleted");
 });
 app.delete("/deleteimporteditem/:id", async (req, res) => {
   const result = await ImportedItem.findByIdAndDelete(req.params.id);
-  res.send("Deleted");
+  const newLog=new Logger({timestamp:new Date(),type:"delete imported",data:JSON.stringify(result)})
+  newLog.save()
+  .then(res.send("Deleted"))
+  .catch(console.log)
 });
 app.delete("/deleteexporteditem/:id", async (req, res) => {
   const result = await ExportedItem.findByIdAndDelete(req.params.id);
-  res.send("Deleted");
+  const newLog=new Logger({timestamp:new Date(),type:"delete exported",data:JSON.stringify(result)})
+  newLog.save()
+  .then(res.send("Deleted"))
+  .catch(console.log)
 });
 app.get("/getuser", async (req, res, next) => {
   try {
@@ -129,8 +151,12 @@ app.post("/exportitem", (req, res) => {
   const q = new ExportedItem(req.body);
   var result = 200;
   q.save()
-    .then(() => {
+    .then(async () => {
       console.log("added to exported items");
+      const newlog=new Logger({timestamp:new Date(),type:"export",data:JSON.stringify(req.body)});
+      newlog.save()
+      .then(console.log("Logged"))
+      .catch()
     })
     .catch((err) => {
       res.status(500).json({ error: "server error" });
@@ -164,37 +190,39 @@ app.post("/setuser", (req, res) => {
 app.post("/undoExport/:id",async (req,res)=>{
   console.log(req.params.id);
   const exportedItem=await ExportedItem.findById(req.params.id);
+  console.log(exportedItem);
   const inventoryItem=await Item.find({name:exportedItem.name});
-  // console.log(inventoryItem[0]);
+  console.log(inventoryItem);
   var result=false;
   if(inventoryItem[0]){
-    // console.log(inventoryItem[0]);
+    console.log(inventoryItem[0]);
     const updateRes=await Item.findByIdAndUpdate(inventoryItem[0]._id, {quantity:exportedItem.quantity+inventoryItem[0].quantity});
-  // console.log(updateRes);
-  if(updateRes){
+  console.log(updateRes);
+  // if(updateRes){
     result=true;
+  // }else{
+  //   result=false;
+  // }
   }else{
     result=false;
-  }
-  }else{
     // console.log("nort exist");
-    const item= Item({
-      name:exportedItem.name,
-      quantity:exportedItem.quantity,
-      date:exportedItem.date,
-      expiry:exportedItem.expiry,
-      description:exportedItem.description,
-      receivedBy:exportedItem.receivedBy,
-      receivedFrom:exportedItem.receivedFrom
-    });
-    item.save()
-    .then((res) => {
-    })  
-    .catch((err) => {
-    });
-    result=true;
+    // const item=await Item({
+    //   name:exportedItem.name,
+    //   quantity:exportedItem.quantity,
+    //   date:exportedItem.date,
+    //   expiry:exportedItem.expiry,
+    //   description:exportedItem.description,
+    //   receivedBy:exportedItem.receivedBy,
+    //   receivedFrom:exportedItem.receivedFrom
+    // });
+    // item.save()
+    // .then((res) => {
+    // })  
+    // .catch((err) => {
+    // });
+    // result=true;
   }
-  if(result){
+  if(result===true){
     const deleteRes=await ExportedItem.deleteOne({_id:req.params.id});
     console.log(deleteRes);
     console.log("done success");
