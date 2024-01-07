@@ -129,7 +129,7 @@ app.delete("/deleteexporteditem/:id", async (req, res) => {
   .then(res.send("Deleted"))
   .catch(console.log)
 });
-app.get("/getuser", async (req, res, next) => {
+app.post("/getuser", async (req, res, next) => {
   try {
     const data = await User.find();
     return res.status(200).json({
