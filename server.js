@@ -1,7 +1,8 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-
+const jwt=require('jsonwebtoken');
+const bc=require('bcrypt');
 const app = express();
 const Logger=require("./loggerFileSchema");
 const Item = require("./schema");
@@ -10,8 +11,8 @@ const ExportedItem = require("./exported");
 const ImportedItem = require("./importedItem");
 // const db='mongodb+srv://tushar:tushar432@cluster0.pvtih2d.mongodb.net/db2?retryWrites=true&w=majority';
 const db =
-    // 'mongodb+srv://tushar:tushar123@cluster0.bnlzgl7.mongodb.net/testing?retryWrites=true&w=majority';
-  "mongodb+srv://tushar:tushar123@cluster0.bnlzgl7.mongodb.net/rishi?retryWrites=true&w=majority";
+    'mongodb+srv://tushar:tushar123@cluster0.bnlzgl7.mongodb.net/testing?retryWrites=true&w=majority';
+  // "mongodb+srv://tushar:tushar123@cluster0.bnlzgl7.mongodb.net/rishi?retryWrites=true&w=majority";
 mongoose
   .connect(db, {
     // useNewUrlParser:true,
@@ -129,19 +130,31 @@ app.delete("/deleteexporteditem/:id", async (req, res) => {
   .then(res.send("Deleted"))
   .catch(console.log)
 });
-app.get("/getuser", async (req, res, next) => {
+app.post("/getuser", async (req, res, next) => {
   try {
-    const data = await User.find();
-    return res.status(200).json({
-      success: true,
-      count: data.length,
-      data: data,
-    });
+    console.log(req.body.username,req.body.password);
+    const data = await User.find({username:req.body.username, password:req.body.password});
+    return res.status(200).send(data);
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: "server error" });
   }
 });
+app.get("/getusers",async(req,res)=>{
+  try {
+    // console.log(req.body.username,req.body.password);
+    const data = await User.find();
+    return res.status(200).send(data);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "server error" });
+  }
+})
+app.post("/findusername",async (req,res)=>{
+  const data=await User.find({username:req.body.username});
+  console.log(data);
+  res.send({length:data.length});
+})
 app.put("/update/:id", async (req, res) => {
   console.log(req.params.id, req.body);
   const result = await Item.findByIdAndUpdate(req.params.id, req.body);
@@ -177,15 +190,30 @@ app.get("/getexported", async (req, res, next) => {
     res.status(500).json({ error: "server error" });
   }
 });
-app.post("/setuser", (req, res) => {
-  const p = new User();
+app.post("/setuser", async (req, res) => {
+  try{
+    console.log("here");
+    const salt=await bc.genSalt();
+    // const hashedPwd=await bc.hash(req.body.password,0);
+    // console.log(salt);
+    // console.log(hashedPwd);
+    const p = new User({
+      ...req.body,
+      // password:hashedPwd
+    });
+  // console.log(req.body);
   p.save()
-    .then(() => {
-      res.send("Successfully added " + p.name);
+    .then((resp) => {
+      console.log(resp,"sbcajk");
+      res.send({result:"true"});
     })
     .catch((err) => {
       console.log(err);
     });
+  }catch{
+    res.status(500).send();
+  }
+  
 });
 app.post("/undoExport/:id",async (req,res)=>{
   console.log(req.params.id);
@@ -198,7 +226,7 @@ app.post("/undoExport/:id",async (req,res)=>{
     console.log(inventoryItem[0]);
     const updateRes=await Item.findByIdAndUpdate(inventoryItem[0]._id, {quantity:exportedItem.quantity+inventoryItem[0].quantity});
   console.log(updateRes);
-  // if(updateRes){
+  // if(updateRes){ 
     result=true;
   // }else{
   //   result=false;
